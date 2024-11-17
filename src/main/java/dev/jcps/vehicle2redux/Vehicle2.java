@@ -72,11 +72,11 @@ public class Vehicle2 extends JPanel implements ActionListener {
     /**
      * The width of the screen.
      */
-    int screenWidth;
+    public int screenWidth;
     /**
      * The height of the screen.
      */
-    int screenHeight;
+    public int screenHeight;
     /**
      * The x-coordinate of the mouse.
      */
@@ -859,6 +859,10 @@ public class Vehicle2 extends JPanel implements ActionListener {
 
     public void setCurrentLevel(int currentLevel) {
         this.currentLevel = currentLevel;
+    }
+
+    public ArrayList<LevelMap> getMaps() {
+        return maps;
     }
 
     /**

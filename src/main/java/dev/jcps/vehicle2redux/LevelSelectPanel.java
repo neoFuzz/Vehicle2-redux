@@ -57,6 +57,8 @@ public class LevelSelectPanel extends JPanel {
      * @see LevelMap
      */
     public LevelSelectPanel(@NotNull ArrayList<LevelMap> maps) {
+        setName("levelSelect");
+
         btnLevels = new ArrayList<>();
 
         int mapIndex = 0;
@@ -200,21 +202,25 @@ public class LevelSelectPanel extends JPanel {
 
         // Update the page label and buttons
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton prevButton = new JButton("<");
         JLabel pageLabel = new JLabel("Page " + (page + 1));
+        JButton prevButton = new JButton("<");
         JButton nextButton = new JButton(">");
         JButton exitButton = new JButton("Exit");
-        JButton endButton = new JButton(">|"); // placeholder button
+        JButton endButton = new JButton(">|");
 
         pageLabel.setSize(100, 20);
+        prevButton.setName("prevButton");
         prevButton.addActionListener(e -> navigatePage(-1));
         prevButton.setEnabled(page != 0);
         prevButton.setToolTipText("Go to previous page");
+        nextButton.setName("nextButton");
         nextButton.addActionListener(e -> navigatePage(1));
         nextButton.setEnabled(page != totalPages - 1);
         nextButton.setToolTipText("Go to next page");
+        exitButton.setName("exitButton");
         exitButton.addActionListener(e -> fireEvent("exit_loop"));
         exitButton.setToolTipText("Exit to main menu");
+        endButton.setName("endButton");
         endButton.addActionListener(e -> navigatePage(totalPages - 1));
         endButton.setEnabled(page != totalPages - 1);
         endButton.setToolTipText("Go to last page");
@@ -244,5 +250,9 @@ public class LevelSelectPanel extends JPanel {
             currentPage = newPage;
             updateButtonsForPage(currentPage);
         }
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
     }
 }

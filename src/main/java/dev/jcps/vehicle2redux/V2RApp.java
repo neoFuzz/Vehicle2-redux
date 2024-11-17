@@ -62,6 +62,7 @@ public class V2RApp extends JFrame implements TriggerListener {
      * The Timer instance for handling game events.
      */
     private static Timer timer = null;
+
     /**
      * The MenuPanel instance representing the main menu of the game.
      * The menu provides options for starting the game, selecting a level, configuring options, and exiting the game.
@@ -71,7 +72,7 @@ public class V2RApp extends JFrame implements TriggerListener {
      * The OptionsPanel instance for managing the game options.
      * This panel provides an interface for users to configure game settings.
      */
-    private final OptionsPanel optionsPanel;
+    private OptionsPanel optionsPanel;
     /**
      * The Vehicle2 instance representing the main game.
      * This object manages the game logic, level transitions, and game controls.
@@ -81,11 +82,13 @@ public class V2RApp extends JFrame implements TriggerListener {
      * The previous level in the game. Used to manage level transitions.
      */
     private int prevLevel;
+
     /**
      * The BestTimesPanel instance displaying the best times recorded in the game.
      * This panel allows users to view the best times achieved for each level.
      */
     private BestTimesPanel btp;
+
     /**
      * The LevelSelectPanel instance for level selection.
      * This panel allows users to choose the game level they want to play.
@@ -113,7 +116,7 @@ public class V2RApp extends JFrame implements TriggerListener {
         timer.setInitialDelay(20);
 
         this.mp = new MenuPanel();
-        this.optionsPanel = new OptionsPanel();
+        this.setOptionsPanel(new OptionsPanel());
 
         // Add window listener to handle closing action
         addWindowListener(new WindowAdapter() {
@@ -158,18 +161,26 @@ public class V2RApp extends JFrame implements TriggerListener {
         }
         V2RApp v2r = new V2RApp();
         v2r.setVehicle2r(new Vehicle2());
-        v2r.levelSelectPanel = new LevelSelectPanel(v2r.getVehicle2r().maps);
-        v2r.btp = new BestTimesPanel();
+        v2r.setLevelSelectPanel(new LevelSelectPanel(v2r.getVehicle2r().maps));
+        v2r.setBtp(new BestTimesPanel());
 
         v2r.getVehicle2r().addEventListener(v2r);
-        v2r.levelSelectPanel.addEventListener(v2r);
-        v2r.optionsPanel.addEventListener(v2r);
-        v2r.btp.addEventListener(v2r);
-        v2r.add(v2r.mp, BorderLayout.CENTER);
+        v2r.getLevelSelectPanel().addEventListener(v2r);
+        v2r.getOptionsPanel().addEventListener(v2r);
+        v2r.getBtp().addEventListener(v2r);
+        v2r.add(v2r.getMp(), BorderLayout.CENTER);
 
         setGameState(MENU_PANEL);
         v2r.revalidate();
         v2r.repaint();
+    }
+
+    public Timer getTimer() {
+        return timer;
+    }
+
+    public void setTimer(Timer t) {
+        timer = t;
     }
 
     public static int getGameState() {
@@ -211,7 +222,7 @@ public class V2RApp extends JFrame implements TriggerListener {
      * When the game state is MENU_PANEL, it ensures the game loop is stopped.
      * The method concludes by repainting the JFrame for visual updates.
      */
-    private void update() {
+    public void update() {
         if (getGameState() == GAME_PANEL) {
             if (getVehicle2r().isRunning()) {
                 getVehicle2r().run();
@@ -252,7 +263,7 @@ public class V2RApp extends JFrame implements TriggerListener {
     private void returnToMenu() {
         setGameState(MENU_PANEL);
         getContentPane().removeAll();
-        add(this.mp);
+        add(this.getMp());
     }
 
     /**
@@ -263,7 +274,7 @@ public class V2RApp extends JFrame implements TriggerListener {
      */
     public void startGame() {
         // Simple protection for no maps
-        if (!getVehicle2r().maps.isEmpty()) {
+        if (getVehicle2r().maps != null && !getVehicle2r().maps.isEmpty()) {
             this.getContentPane().removeAll();
             this.add(getVehicle2r());
             setGameState(GAME_PANEL);
@@ -293,40 +304,42 @@ public class V2RApp extends JFrame implements TriggerListener {
         String message = event.getMessage();
         if (isDebug()) V2RApp.logger.debug("Event occurred: {}", message);
         if (message.startsWith("exit_loop")) {
-            if (getGameState() == MENU_PANEL) {
-                System.exit(0);
-            }
-            if (getGameState() == OPTIONS_PANEL || getGameState() == SELECT_PANEL || getGameState() == BEST_TIMES) {
-                timer.stop();
-                if (getGameState() == OPTIONS_PANEL) {
+            switch (getGameState()) {
+                case MENU_PANEL:
+                    System.exit(0);
+                    break;
+                case OPTIONS_PANEL: // NOSONAR : is meant to fall through
                     int newSize = Integer.parseInt(message.substring(message.lastIndexOf(':') + 1));
                     switch (newSize) {
                         case 320 -> centerWindow(320);
                         case 800 -> centerWindow(800);
                         default -> centerWindow(640);
                     }
-
-                }
-                setGameState(MENU_PANEL);
-                this.getContentPane().removeAll();
-                this.add(this.mp);
-            }
-            if (getGameState() == GAME_PANEL) {
-                timer.stop();
-                setGameState(MENU_PANEL);
-                getVehicle2r().setCurrentLevel(0);
-                prevLevel = -1;
-                this.getContentPane().removeAll();
-                this.add(this.mp);
+                case SELECT_PANEL, BEST_TIMES:
+                    timer.stop();
+                    setGameState(MENU_PANEL);
+                    this.getContentPane().removeAll();
+                    this.add(this.getMp());
+                    break;
+                case GAME_PANEL:
+                    timer.stop();
+                    setGameState(MENU_PANEL);
+                    getVehicle2r().setCurrentLevel(0);
+                    prevLevel = -1;
+                    this.getContentPane().removeAll();
+                    this.add(this.getMp());
+                default:
             }
         }
+
         if (message.contains("gotoBestTimes")) {
             setGameState(BEST_TIMES);
             this.getContentPane().removeAll();
-            this.btp = new BestTimesPanel();
-            this.btp.addEventListener(this);
-            this.add(this.btp);
+            this.setBtp(new BestTimesPanel());
+            this.getBtp().addEventListener(this);
+            this.add(this.getBtp());
         }
+
         if (message.contains("map:")) {
             String msg = message.substring(message.lastIndexOf(':') + 1);
 
@@ -348,7 +361,7 @@ public class V2RApp extends JFrame implements TriggerListener {
      */
     private void openOptions() {
         this.getContentPane().removeAll();
-        this.add(this.optionsPanel);
+        this.add(this.getOptionsPanel());
         setGameState(OPTIONS_PANEL);
         revalidate();
         repaint();
@@ -365,7 +378,7 @@ public class V2RApp extends JFrame implements TriggerListener {
         // Simple protection for no maps
         if (!getVehicle2r().maps.isEmpty()) {
             this.getContentPane().removeAll();
-            this.add(this.levelSelectPanel);
+            this.add(this.getLevelSelectPanel());
             setGameState(SELECT_PANEL);
         } else {
             JOptionPane.showMessageDialog(null,
@@ -393,6 +406,34 @@ public class V2RApp extends JFrame implements TriggerListener {
      */
     public void setVehicle2r(Vehicle2 vehicle2r) {
         this.vehicle2r = vehicle2r;
+    }
+
+    public LevelSelectPanel getLevelSelectPanel() {
+        return levelSelectPanel;
+    }
+
+    public void setLevelSelectPanel(LevelSelectPanel levelSelectPanel) {
+        this.levelSelectPanel = levelSelectPanel;
+    }
+
+    public BestTimesPanel getBtp() {
+        return btp;
+    }
+
+    public void setBtp(BestTimesPanel btp) {
+        this.btp = btp;
+    }
+
+    public OptionsPanel getOptionsPanel() {
+        return optionsPanel;
+    }
+
+    public MenuPanel getMp() {
+        return mp;
+    }
+
+    public void setOptionsPanel(OptionsPanel optionsPanel) {
+        this.optionsPanel = optionsPanel;
     }
 
     /**
@@ -444,18 +485,22 @@ public class V2RApp extends JFrame implements TriggerListener {
 
             // Set up "Start Game" button
             btnStart = createButton("Start Game", buttonSize, KeyEvent.VK_S, e -> startGame());
+            btnStart.setName("btnStart");
 
             // Set up Level Select button
             btnLevelSelect = createButton("Level Select", buttonSize, KeyEvent.VK_L, e -> openLevelSelect());
+            btnLevelSelect.setName("btnLevelSelect");
 
             // Set up Options button
             btnOptions = createButton("Options", buttonSize, KeyEvent.VK_O, e -> openOptions());
+            btnOptions.setName("btnOptions");
 
             // Set up exit button
             btnExit = createButton("Exit Game", buttonSize, KeyEvent.VK_X, e -> {
                 LevelUtilities.writeHashmapToFile(Vehicle2.levelTimes, LEVEL_TIMES);
                 System.exit(0);
             });
+            btnExit.setName("btnExit");
 
             // Add to panel
             add(btnStart, gbc);

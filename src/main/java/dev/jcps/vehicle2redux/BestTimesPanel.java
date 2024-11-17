@@ -102,6 +102,7 @@ public class BestTimesPanel extends JPanel {
 
         // Set up the button
         btnMenu = new JButton("Return to menu");
+        btnMenu.setName("btnExit");
         btnMenu.addActionListener(e -> returnToMenu());
 
         // Center titleLabel horizontally

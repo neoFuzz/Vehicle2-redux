@@ -61,12 +61,15 @@ public class OptionsPanel extends JPanel {
         JLabel lblBlank = new JLabel(" ");
         lblBlank.setFont(new Font("Arial", Font.BOLD, 18));
         btnMenu = new JButton("Return to menu");
+        btnMenu.setName("btnExit");
         btnMenu.addActionListener(e -> returnToMenu());
         btnBTPanel = new JButton("Best Times");
+        btnBTPanel.setName("btnBTPanel");
         btnBTPanel.addActionListener(e -> goBestTimes());
 
         String[] screenSize = {"320", "640", "800"};
         screenSizeCombo = new JComboBox<>(screenSize);
+        screenSizeCombo.setName("screenSizeCombo");
         screenSizeCombo.setSelectedIndex(1);
         soundCheckBox = new JCheckBox();
 
